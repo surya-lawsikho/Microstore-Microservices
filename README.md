@@ -162,3 +162,7 @@ npm run dev
 2. **Port Conflicts**: Check if the required ports (8080, 3001, 3002, 3003) are available
 3. **Environment Variables**: Verify all `.env` files are properly configured
 4. **Dependencies**: Run `npm install` in each service directory if you encounter module errors
+
+## Swagger
+
+To run Swagger Api: http://localhost:8080/api-docs/
