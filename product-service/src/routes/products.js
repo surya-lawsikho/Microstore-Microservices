@@ -3,6 +3,7 @@ import Product from '../models/Product.js';
 
 const router = Router();
 
+
 router.get('/health', (_, res) => res.json({ ok: true, service: 'product-service' }));
 
 router.post('/', async (req, res) => {

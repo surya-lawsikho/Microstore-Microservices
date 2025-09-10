@@ -4,7 +4,8 @@ A microservices-based e-commerce application built with Node.js, Express, TypeOR
 
 ## Architecture
 
-- **Gateway Service** (Port 8080): API Gateway that routes requests to appropriate services
+- **Frontend** (Port 3000): React application with Redux Toolkit for state management
+- **Gateway Service** (Port 8080 by default): API Gateway that routes requests to appropriate services
 - **User Service** (Port 3001): Handles user authentication and management
 - **Product Service** (Port 3002): Manages product catalog
 - **Order Service** (Port 3003): Handles order processing
@@ -31,7 +32,7 @@ Create `.env` files in each service directory:
 
 ### Gateway (.env)
 ```env
-PORT=8080
+PORT=8080 # Ensure this matches the port your frontend calls
 USERS_URL=http://localhost:3001
 PRODUCTS_URL=http://localhost:3002
 ORDERS_URL=http://localhost:3003
@@ -78,6 +79,7 @@ PRODUCT_SERVICE_URL=http://localhost:3002
    cd ../user-service && npm install
    cd ../product-service && npm install
    cd ../order-service && npm install
+   cd ../frontend && npm install
    ```
 
 ## Running the Application
@@ -108,6 +110,12 @@ cd order-service
 npm run dev
 ```
 
+### Terminal 5 - Frontend
+```bash
+cd frontend
+npm start
+```
+
 ## API Endpoints
 
 ### Gateway (http://localhost:8080)
@@ -122,6 +130,8 @@ npm run dev
 - `DELETE /api/products/:id` - Delete product
 - `POST /api/orders` - Create order (requires auth)
 - `GET /api/orders` - Get user orders (requires auth)
+
+
 
 ## Database Schema
 
@@ -159,9 +169,33 @@ npm run dev
 ## Troubleshooting
 
 1. **Database Connection Issues**: Ensure PostgreSQL is running and the databases are created
-2. **Port Conflicts**: Check if the required ports (8080, 3001, 3002, 3003) are available
+2. **Port Conflicts**: Check if the required ports (3000, 8080, 3001, 3002, 3003) are available
 3. **Environment Variables**: Verify all `.env` files are properly configured
 4. **Dependencies**: Run `npm install` in each service directory if you encounter module errors
+
+## Frontend Application
+
+The React frontend application provides a modern, responsive user interface for the MicroStore application.
+
+### Features
+- **User Authentication**: Registration and login with JWT tokens
+- **Product Catalog**: Browse, search, and filter products
+- **Shopping Cart**: Add/remove items with real-time updates
+- **Order Management**: View order history and place new orders
+- **Responsive Design**: Works on desktop and mobile devices
+- **Error Handling**: Comprehensive error handling with retry logic
+- **State Management**: Redux Toolkit for predictable state management
+
+### Access
+- **Frontend**: http://localhost:3000
+- **API Gateway**: http://localhost:8080
+
+### Technology Stack
+- React 18 with TypeScript
+- Redux Toolkit for state management
+- React Router for navigation
+- Tailwind CSS for styling
+- Axios for API communication
 
 ## Swagger
 
