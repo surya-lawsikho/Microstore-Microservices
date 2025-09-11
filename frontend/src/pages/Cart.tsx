@@ -11,6 +11,7 @@ import {
 import { ShoppingCartIcon, TrashIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { formatINR } from '../utils/currency';
 
 const Cart: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -97,7 +98,7 @@ const Cart: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
-                  <p className="text-sm text-gray-500">${Number(item.price).toFixed(2)} each</p>
+                  <p className="text-sm text-gray-500">{formatINR(item.price)} each</p>
                   <p className="text-sm text-gray-500">Stock: {item.stock}</p>
                 </div>
 
@@ -123,7 +124,7 @@ const Cart: React.FC = () => {
                   {/* Item Total */}
                   <div className="text-right">
                     <p className="text-lg font-medium text-gray-900">
-                      ${(Number(item.price) * item.qty).toFixed(2)}
+                      {formatINR(Number(item.price) * item.qty)}
                     </p>
                   </div>
 
@@ -146,7 +147,7 @@ const Cart: React.FC = () => {
         <div className="space-y-4">
           <div className="flex justify-between text-lg font-medium">
             <span>Total</span>
-            <span>${cartTotal.toFixed(2)}</span>
+            <span>{formatINR(cartTotal)}</span>
           </div>
           
           <div className="text-sm text-gray-500">

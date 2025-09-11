@@ -1,12 +1,30 @@
 import { Router } from 'express';
 import Product from '../models/Product.js';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
+function auth(req, res, next) {
+  const h = req.headers.authorization || '';
+  const [, token] = h.split(' ');
+  if (!token) return res.status(401).json({ error: 'missing token' });
+  try {
+    const secret = process.env.ACCESS_TOKEN_SECRET || 'access_secret';
+    req.user = jwt.verify(token, secret);
+    next();
+  } catch {
+    res.status(401).json({ error: 'invalid token' });
+  }
+}
+
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+  next();
+}
 
 router.get('/health', (_, res) => res.json({ ok: true, service: 'product-service' }));
 
-router.post('/', async (req, res) => {
+router.post('/', auth, requireAdmin, async (req, res) => {
   try {
     const { name, price, stock } = req.body;
     const productRepository = req.AppDataSource.getRepository(Product);
@@ -41,7 +59,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, requireAdmin, async (req, res) => {
   try {
     const productRepository = req.AppDataSource.getRepository(Product);
     const product = await productRepository.findOne({ where: { id: req.params.id } });
@@ -55,7 +73,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
     const productRepository = req.AppDataSource.getRepository(Product);
     const product = await productRepository.findOne({ where: { id: req.params.id } });

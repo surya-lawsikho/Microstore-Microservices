@@ -13,10 +13,23 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+// Helpers for token storage
+const getAccessToken = () => localStorage.getItem('accessToken');
+const getRefreshToken = () => localStorage.getItem('refreshToken');
+const setTokens = (accessToken?: string, refreshToken?: string) => {
+  if (typeof accessToken === 'string') localStorage.setItem('accessToken', accessToken);
+  if (typeof refreshToken === 'string') localStorage.setItem('refreshToken', refreshToken);
+};
+const clearTokens = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+};
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,14 +48,22 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle 401 errors (unauthorized)
+    // Handle 401 with refresh flow
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      toast.error('Session expired. Please login again.');
-      return Promise.reject(error);
+      try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) throw new Error('no refresh');
+        const { data } = await axios.post(`${API_BASE_URL}/api/users/refresh-token`, { refreshToken });
+        setTokens(data.accessToken, data.refreshToken);
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        return api(originalRequest);
+      } catch (e) {
+        clearTokens();
+        window.location.href = '/login';
+        toast.error('Session expired. Please login again.');
+        return Promise.reject(error);
+      }
     }
 
     // Handle network errors with retry logic
@@ -69,6 +90,7 @@ api.interceptors.response.use(
 export interface User {
   id: string;
   username: string;
+  role: 'user' | 'admin';
   createdAt: string;
 }
 
@@ -107,7 +129,9 @@ export interface RegisterRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  user: User;
 }
 
 export interface CreateOrderRequest {
@@ -133,6 +157,16 @@ class ApiService {
   async getCurrentUser(): Promise<User> {
     const response = await api.get('/api/users/me');
     return response.data;
+  }
+
+  async refreshToken(): Promise<{ accessToken: string; refreshToken: string }> {
+    const response = await api.post('/api/users/refresh-token', { refreshToken: getRefreshToken() });
+    return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await api.post('/api/users/logout');
+    clearTokens();
   }
 
   // Product endpoints

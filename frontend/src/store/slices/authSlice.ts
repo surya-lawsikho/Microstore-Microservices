@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { apiService, User, LoginRequest, RegisterRequest } from '../../services/api';
+import { apiService, User, LoginRequest, RegisterRequest, LoginResponse } from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -12,8 +13,9 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  accessToken: localStorage.getItem('accessToken'),
+  refreshToken: localStorage.getItem('refreshToken'),
+  isAuthenticated: !!localStorage.getItem('accessToken'),
   loading: false,
   error: null,
 };
@@ -23,15 +25,13 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await apiService.login(credentials);
-      localStorage.setItem('token', response.token);
-      
-      // Fetch user details
-      const user = await apiService.getCurrentUser();
-      localStorage.setItem('user', JSON.stringify(user));
-      
+      const response: LoginResponse = await apiService.login(credentials);
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.user));
+
       toast.success('Login successful!');
-      return { token: response.token, user };
+      return { accessToken: response.accessToken, refreshToken: response.refreshToken, user: response.user };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Login failed');
     }
@@ -66,7 +66,7 @@ export const loadUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async () => {
-    localStorage.removeItem('token');
+    await apiService.logout();
     localStorage.removeItem('user');
     toast.success('Logged out successfully');
   }
@@ -79,8 +79,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setCredentials: (state, action: PayloadAction<{ token: string; user: User }>) => {
-      state.token = action.payload.token;
+    setCredentials: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string; user: User }>) => {
+      state.accessToken = action.payload.accessToken;
+      if (action.payload.refreshToken) state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
       state.isAuthenticated = true;
     },
@@ -94,7 +95,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
@@ -128,13 +130,15 @@ const authSlice = createSlice({
       .addCase(loadUser.rejected, (state) => {
         state.loading = false;
         state.isAuthenticated = false;
-        state.token = null;
+        state.accessToken = null;
+        state.refreshToken = null;
         state.user = null;
       })
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
-        state.token = null;
+        state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
         state.error = null;
       });

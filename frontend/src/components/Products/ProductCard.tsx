@@ -6,6 +6,7 @@ import { addToCart } from '../../store/slices/orderSlice';
 import { Product } from '../../services/api';
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { formatINR } from '../../utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -44,7 +45,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
         
         <p className="text-2xl font-bold text-primary-600 mb-4">
-          ${Number(product.price).toFixed(2)}
+          {formatINR(product.price)}
         </p>
         
         <div className="flex items-center justify-between">

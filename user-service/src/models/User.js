@@ -18,6 +18,15 @@ export default new EntitySchema({
       type: "varchar",
       nullable: false
     },
+    role: {
+      type: "varchar",
+      nullable: false,
+      default: "user"
+    },
+    refreshTokenHash: {
+      type: "varchar",
+      nullable: true
+    },
     createdAt: {
       type: "timestamp",
       createDate: true

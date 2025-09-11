@@ -12,16 +12,16 @@ import { LoginRequest, RegisterRequest } from '../services/api';
 
 export function useAuth() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, token, isAuthenticated, loading, error } = useSelector(
+  const { user, accessToken, isAuthenticated, loading, error } = useSelector(
     (state: RootState) => state.auth
   );
 
   // Load user on mount if token exists
   useEffect(() => {
-    if (token && !user) {
+    if (accessToken && !user) {
       dispatch(loadUser());
     }
-  }, [token, user, dispatch]);
+  }, [accessToken, user, dispatch]);
 
   const login = async (credentials: LoginRequest) => {
     return dispatch(loginUser(credentials));
@@ -41,7 +41,7 @@ export function useAuth() {
 
   return {
     user,
-    token,
+    accessToken,
     isAuthenticated,
     loading,
     error,

@@ -46,7 +46,10 @@ DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=microstore_users
-JWT_SECRET=your_jwt_secret
+ACCESS_TOKEN_SECRET=your_access_secret
+REFRESH_TOKEN_SECRET=your_refresh_secret
+ACCESS_TOKEN_TTL=15m
+REFRESH_TOKEN_TTL=7d
 ```
 
 ### Product Service (.env)
@@ -57,6 +60,7 @@ DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=microstore_products
+ACCESS_TOKEN_SECRET=your_access_secret
 ```
 
 ### Order Service (.env)
@@ -67,7 +71,7 @@ DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=microstore_orders
-JWT_SECRET=your_jwt_secret
+ACCESS_TOKEN_SECRET=your_access_secret
 PRODUCT_SERVICE_URL=http://localhost:3002
 ```
 
@@ -123,11 +127,13 @@ npm start
 - `POST /api/users/register` - User registration
 - `POST /api/users/login` - User login
 - `GET /api/users/me` - Get current user (requires auth)
+- `POST /api/users/refresh-token` - Refresh access token
+- `POST /api/users/logout` - Logout and invalidate refresh token
 - `GET /api/products` - List all products
-- `POST /api/products` - Create product
+- `POST /api/products` - Create product (admin only)
 - `GET /api/products/:id` - Get product by ID
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
+- `PUT /api/products/:id` - Update product (admin only)
+- `DELETE /api/products/:id` - Delete product (admin only)
 - `POST /api/orders` - Create order (requires auth)
 - `GET /api/orders` - Get user orders (requires auth)
 
@@ -179,12 +185,15 @@ The React frontend application provides a modern, responsive user interface for 
 
 ### Features
 - **User Authentication**: Registration and login with JWT tokens
+- **Refresh Tokens**: Automatic token refresh on expiry, auto-logout on failure
 - **Product Catalog**: Browse, search, and filter products
 - **Shopping Cart**: Add/remove items with real-time updates
 - **Order Management**: View order history and place new orders
+- **Admin Panel**: Manage products (create/update/delete) at `/admin` (admin role only)
 - **Responsive Design**: Works on desktop and mobile devices
 - **Error Handling**: Comprehensive error handling with retry logic
 - **State Management**: Redux Toolkit for predictable state management
+- **Currency**: Prices displayed in INR (₹), Indian grouping via `Intl.NumberFormat('en-IN')`
 
 ### Access
 - **Frontend**: http://localhost:3000
@@ -200,3 +209,24 @@ The React frontend application provides a modern, responsive user interface for 
 ## Swagger
 
 To run Swagger Api: http://localhost:8080/api-docs/
+
+## Role-Based Access & Admin Setup
+
+- Product mutations are admin-only. To create an admin user:
+  - Register via gateway with role:
+    ```bash
+    curl -X POST http://localhost:8080/api/users/register \
+      -H "Content-Type: application/json" \
+      -d '{"username":"admin1","password":"Your$trongPass123","role":"admin"}'
+    ```
+  - Login at `/login`, then open `/admin`.
+
+## Common Troubleshooting
+
+- 401 Unauthorized on product create/update:
+  - Ensure all services share the same `ACCESS_TOKEN_SECRET`.
+  - Restart user-service, product-service, and order-service after changing secrets.
+  - Log out and log back in to obtain a fresh access token.
+
+- 502 Bad Gateway from frontend:
+  - Start gateway and all upstream services; 502 indicates the upstream was down.

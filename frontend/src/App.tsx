@@ -11,9 +11,12 @@ import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminProducts from './pages/AdminProducts';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
+
+const AdminPage = AdminProducts;
 
 function App() {
   return (
@@ -37,6 +40,11 @@ function App() {
                 <Route path="products/:id" element={<ProductDetails />} />
                 <Route path="cart" element={<Cart />} />
                 <Route path="orders" element={<Orders />} />
+                <Route path="admin" element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminPage />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               {/* Catch all route */}

@@ -11,6 +11,7 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { formatINR } from '../utils/currency';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -117,7 +118,7 @@ const ProductDetails: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{currentProduct.name}</h1>
               <p className="mt-2 text-3xl font-bold text-primary-600">
-                ${Number(currentProduct.price).toFixed(2)}
+                {formatINR(currentProduct.price)}
               </p>
             </div>
 
@@ -186,7 +187,7 @@ const ProductDetails: React.FC = () => {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Price</dt>
-                  <dd className="mt-1 text-sm text-gray-900">${Number(currentProduct.price).toFixed(2)}</dd>
+                  <dd className="mt-1 text-sm text-gray-900">{formatINR(currentProduct.price)}</dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Stock</dt>

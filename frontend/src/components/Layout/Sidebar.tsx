@@ -6,17 +6,20 @@ import {
   HomeIcon,
   ShoppingBagIcon,
   ShoppingCartIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar: React.FC = () => {
   const { sidebarOpen } = useSelector((state: RootState) => state.ui);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon },
     { name: 'Products', href: '/products', icon: ShoppingBagIcon },
     { name: 'Cart', href: '/cart', icon: ShoppingCartIcon },
     { name: 'Orders', href: '/orders', icon: ClipboardDocumentListIcon },
+    ...(user?.role === 'admin' ? [{ name: 'Admin', href: '/admin', icon: ShieldCheckIcon }] : []),
   ];
 
   return (

@@ -10,7 +10,7 @@ import Order from './models/Order.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 3003;
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'access_secret';
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://localhost:3002';
 
 // Database configuration
@@ -60,7 +60,7 @@ function auth(req, res, next) {
   const [, token] = h.split(' ');
   if (!token) return res.status(401).json({ error: 'missing token' });
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, ACCESS_TOKEN_SECRET);
     next();
   } catch {
     res.status(401).json({ error: 'invalid token' });
