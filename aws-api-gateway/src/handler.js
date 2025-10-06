@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { SQSClient, DeleteMessageBatchCommand } = require('@aws-sdk/client-sqs');
+const jwt = require('jsonwebtoken');
 
 // Service URLs from environment variables
 const USERS_URL = process.env.USERS_URL || 'http://localhost:3001';
@@ -8,6 +9,7 @@ const PRODUCTS_URL = process.env.PRODUCTS_URL || 'http://localhost:3002';
 const ORDERS_URL = process.env.ORDERS_URL || 'http://localhost:3003';
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 const SQS_QUEUE_NAME = process.env.SQS_QUEUE_NAME;
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || '';
 
 // AWS clients (lazy, region taken from env/AWS SDK defaults)
 const s3Client = new S3Client({});
@@ -149,6 +151,35 @@ exports.health = async (event) => {
       ordersUrl: ORDERS_URL
     }
   });
+};
+
+// Lambda Authorizer (REQUEST type for HTTP API)
+exports.authorize = async (event) => {
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+    return {
+      isAuthorized: false,
+      context: { reason: 'missing_or_malformed_authorization_header' }
+    };
+  }
+  const token = authHeader.slice(7).trim();
+  try {
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    return {
+      isAuthorized: true,
+      context: {
+        sub: decoded.sub || decoded.id || '',
+        username: decoded.username || '',
+        role: decoded.role || 'user'
+      }
+    };
+  } catch (e) {
+    console.log('Authorize error:', e.message);
+    return {
+      isAuthorized: false,
+      context: { reason: 'invalid_token' }
+    };
+  }
 };
 
 // S3 event processor: logs new object keys; writes a small marker file

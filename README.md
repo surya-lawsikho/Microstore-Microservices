@@ -164,6 +164,12 @@ Sample functions are included in `aws-api-gateway` and wired to:
 
 See `aws-api-gateway/README.md` for deploy and test instructions.
 
+## Lambda Authorizer (JWT)
+
+- The HTTP API protects `/api/{proxy+}` using a Lambda Authorizer.
+- Public routes remain open: `GET /health`, `POST /api/users/register|login|refresh-token`, `GET /api/products`.
+- Set `ACCESS_TOKEN_SECRET` to match the user-service before deploy.
+
 ## Quick cURL Tests (via Lambda API on http://127.0.0.1:3008)
 
 Health:

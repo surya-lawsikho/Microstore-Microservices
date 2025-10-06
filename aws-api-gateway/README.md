@@ -99,6 +99,34 @@ https://your-api-id.execute-api.region.amazonaws.com/stage
 - `POST /api/orders` - Create order (requires auth)
 - `GET /api/orders` - Get user orders (requires auth)
 
+## Authorization with Lambda Authorizer
+
+This POC uses a Lambda Authorizer (REQUEST type) to protect `/api/{proxy+}` by default while leaving specific routes public.
+
+### Public (no auth)
+- `GET /health`
+- `POST /api/users/register`
+- `POST /api/users/login`
+- `POST /api/users/refresh-token`
+- `GET /api/products`
+
+### Secured (authorizer)
+- All other `/api/{proxy+}` routes require an `Authorization: Bearer <JWT>` header.
+
+### Configure Secret
+Set the JWT secret before deploying (must match user-service):
+```
+export ACCESS_TOKEN_SECRET=your_access_secret   # bash
+$env:ACCESS_TOKEN_SECRET="your_access_secret"   # PowerShell
+```
+
+### Test Secured Routes
+1) Login to obtain a JWT from `POST /api/users/login`.
+2) Call a secured route with the token:
+```
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://{apiId}.execute-api.{region}.amazonaws.com/dev/api/orders
+```
+
 ## Event-Driven Triggers (POC)
 
 - S3: `s3:ObjectCreated:*` on bucket `${stage}`-scoped bucket writes a marker under `processed/`.
