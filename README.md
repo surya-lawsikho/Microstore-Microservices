@@ -120,6 +120,84 @@ cd frontend
 npm start
 ```
 
+## Run with AWS API Gateway (Local Lambda via Serverless Offline)
+
+Run the Lambda-based gateway that proxies to your local services.
+
+### 1) Install dependencies (first time only)
+```bash
+cd aws-api-gateway
+npm install
+```
+
+### 2) Start microservices (in separate terminals)
+```bash
+cd user-service && npm run dev
+```
+```bash
+cd product-service && npm run dev
+```
+```bash
+cd order-service && npm run dev
+```
+
+### 3) Start Serverless Offline (Lambda API)
+```bash
+cd aws-api-gateway
+npx serverless offline --httpPort 3008 --host 0.0.0.0
+```
+
+The Lambda API will be available at: http://127.0.0.1:3008
+
+### 4) Optional – Deploy to AWS
+```bash
+cd aws-api-gateway
+serverless deploy --stage dev
+```
+
+## Quick cURL Tests (via Lambda API on http://127.0.0.1:3008)
+
+Health:
+```bash
+curl http://127.0.0.1:3008/health
+```
+
+Register user:
+```bash
+curl -X POST http://127.0.0.1:3008/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"TestPass123!"}'
+```
+
+Login and capture tokens (bash):
+```bash
+ACCESS_TOKEN=$(curl -s -X POST http://127.0.0.1:3008/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"TestPass123!"}' | jq -r .accessToken)
+
+REFRESH_TOKEN=$(curl -s -X POST http://127.0.0.1:3008/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"TestPass123!"}' | jq -r .refreshToken)
+```
+
+Get current user:
+```bash
+curl -H "Authorization: Bearer $ACCESS_TOKEN" http://127.0.0.1:3008/api/users/me
+```
+
+List products:
+```bash
+curl http://127.0.0.1:3008/api/products
+```
+
+Create order (replace PRODUCT_ID):
+```bash
+curl -X POST http://127.0.0.1:3008/api/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -d '{"items":[{"productId":"PRODUCT_ID","qty":1}]}'
+```
+
 ## API Endpoints
 
 ### Gateway (http://localhost:8080)

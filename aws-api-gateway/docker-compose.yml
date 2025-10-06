@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Local API Gateway for testing
+  api-gateway:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - USERS_URL=http://user-service:3001
+      - PRODUCTS_URL=http://product-service:3002
+      - ORDERS_URL=http://order-service:3003
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - microstore-network
+
+  # User Service
+  user-service:
+    build: ../user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DB_HOST=postgres-users
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=microstore_users
+      - ACCESS_TOKEN_SECRET=your_access_secret
+      - REFRESH_TOKEN_SECRET=your_refresh_secret
+    depends_on:
+      - postgres-users
+    networks:
+      - microstore-network
+
+  # Product Service
+  product-service:
+    build: ../product-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DB_HOST=postgres-products
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=microstore_products
+      - ACCESS_TOKEN_SECRET=your_access_secret
+    depends_on:
+      - postgres-products
+    networks:
+      - microstore-network
+
+  # Order Service
+  order-service:
+    build: ../order-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - DB_HOST=postgres-orders
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=microstore_orders
+      - ACCESS_TOKEN_SECRET=your_access_secret
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+    depends_on:
+      - postgres-orders
+    networks:
+      - microstore-network
+
+  # PostgreSQL for Users
+  postgres-users:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=microstore_users
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_users_data:/var/lib/postgresql/data
+    networks:
+      - microstore-network
+
+  # PostgreSQL for Products
+  postgres-products:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=microstore_products
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_products_data:/var/lib/postgresql/data
+    networks:
+      - microstore-network
+
+  # PostgreSQL for Orders
+  postgres-orders:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=microstore_orders
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_orders_data:/var/lib/postgresql/data
+    networks:
+      - microstore-network
+
+volumes:
+  postgres_users_data:
+  postgres_products_data:
+  postgres_orders_data:
+
+networks:
+  microstore-network:
+    driver: bridge

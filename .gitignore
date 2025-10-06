@@ -188,6 +188,14 @@ dist
 # Serverless directories
 .serverless/
 
+# AWS API Gateway POC local files
+aws-api-gateway/.env
+aws-api-gateway/.serverless/
+aws-api-gateway/.aws-sam/
+aws-api-gateway/.npm
+aws-api-gateway/logs/
+aws-api-gateway/coverage/
+
 # FuseBox cache
 .fusebox/
 
