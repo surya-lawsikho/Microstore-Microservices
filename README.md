@@ -155,6 +155,15 @@ cd aws-api-gateway
 serverless deploy --stage dev
 ```
 
+## Event-Driven Lambda (POC)
+
+Sample functions are included in `aws-api-gateway` and wired to:
+- S3 ObjectCreated on bucket `microstore-poc-bucket-<stage>`
+- SQS queue `microstore-poc-queue-<stage>`
+- Scheduled rule `rate(5 minutes)`
+
+See `aws-api-gateway/README.md` for deploy and test instructions.
+
 ## Quick cURL Tests (via Lambda API on http://127.0.0.1:3008)
 
 Health:

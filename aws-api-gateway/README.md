@@ -99,6 +99,66 @@ https://your-api-id.execute-api.region.amazonaws.com/stage
 - `POST /api/orders` - Create order (requires auth)
 - `GET /api/orders` - Get user orders (requires auth)
 
+## Event-Driven Triggers (POC)
+
+- S3: `s3:ObjectCreated:*` on bucket `${stage}`-scoped bucket writes a marker under `processed/`.
+- SQS: Consumer for queue `${stage}`-scoped queue, logs and deletes messages.
+- Schedule: CloudWatch Events rule `rate(5 minutes)` triggers a heartbeat and optional warm-up.
+
+### Configure Locally
+
+Update `.env` (copy from `env.example`):
+
+```
+S3_BUCKET_NAME=microstore-poc-bucket-dev
+SQS_QUEUE_NAME=microstore-poc-queue-dev
+WARM_HEALTH_URL=http://localhost:3000/health
+```
+
+### Deploy Resources
+
+Resources are defined in `serverless.yml` and created on deploy:
+
+```
+npm run deploy:dev
+```
+
+### Test S3 Trigger
+
+After deploy, upload a file to the bucket shown in the output (or Console):
+
+```
+aws s3 cp sample.json s3://microstore-poc-bucket-dev/events/sample.json
+```
+
+Check Lambda logs:
+
+```
+serverless logs -f s3Processor -t
+```
+
+### Test SQS Trigger
+
+Send a message to the queue:
+
+```
+aws sqs send-message --queue-url $(aws sqs get-queue-url --queue-name microstore-poc-queue-dev --query QueueUrl --output text) --message-body '{"type":"demo","ts":'"$(date +%s)"'}'
+```
+
+Tail logs:
+
+```
+serverless logs -f sqsConsumer -t
+```
+
+### Verify Scheduled Trigger
+
+Tail scheduled function logs and wait up to 5 minutes:
+
+```
+serverless logs -f scheduledPing -t
+```
+
 ## Configuration
 
 ### Environment Variables

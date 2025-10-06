@@ -1,9 +1,17 @@
 const axios = require('axios');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { SQSClient, DeleteMessageBatchCommand } = require('@aws-sdk/client-sqs');
 
 // Service URLs from environment variables
 const USERS_URL = process.env.USERS_URL || 'http://localhost:3001';
 const PRODUCTS_URL = process.env.PRODUCTS_URL || 'http://localhost:3002';
 const ORDERS_URL = process.env.ORDERS_URL || 'http://localhost:3003';
+const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
+const SQS_QUEUE_NAME = process.env.SQS_QUEUE_NAME;
+
+// AWS clients (lazy, region taken from env/AWS SDK defaults)
+const s3Client = new S3Client({});
+const sqsClient = new SQSClient({});
 
 // CORS headers
 const corsHeaders = {
@@ -141,4 +149,62 @@ exports.health = async (event) => {
       ordersUrl: ORDERS_URL
     }
   });
+};
+
+// S3 event processor: logs new object keys; writes a small marker file
+exports.s3Processor = async (event) => {
+  console.log('S3 Event:', JSON.stringify(event, null, 2));
+  const records = event.Records || [];
+  const processedAt = new Date().toISOString();
+  try {
+    for (const record of records) {
+      const bucket = record.s3.bucket.name;
+      const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '));
+      console.log(`New object in S3 → bucket=${bucket} key=${key}`);
+      const markerKey = `processed/${key}.processed.json`;
+      const body = JSON.stringify({ sourceKey: key, processedAt });
+      await s3Client.send(new PutObjectCommand({ Bucket: bucket, Key: markerKey, Body: body, ContentType: 'application/json' }));
+    }
+    return createResponse(200, { ok: true, processed: records.length });
+  } catch (err) {
+    console.error('s3Processor error:', err);
+    return createResponse(500, { ok: false, error: err.message });
+  }
+};
+
+// SQS consumer: logs messages and deletes them from the queue
+exports.sqsConsumer = async (event) => {
+  console.log('SQS Event:', JSON.stringify(event, null, 2));
+  const records = event.Records || [];
+  const entries = [];
+  try {
+    for (const record of records) {
+      console.log('SQS message body:', record.body);
+      entries.push({ Id: record.messageId, ReceiptHandle: record.receiptHandle });
+    }
+    // Delete in batch if using event source mapping, AWS handles deletion automatically; this is defensive
+    if (entries.length > 0 && process.env.AWS_SQS_QUEUE_URL) {
+      await sqsClient.send(new DeleteMessageBatchCommand({ QueueUrl: process.env.AWS_SQS_QUEUE_URL, Entries: entries }));
+    }
+    return createResponse(200, { ok: true, consumed: records.length });
+  } catch (err) {
+    console.error('sqsConsumer error:', err);
+    // returning 200 prevents retries; to allow retries, throw error
+    return createResponse(500, { ok: false, error: err.message });
+  }
+};
+
+// Scheduled ping: simple heartbeat and optional warm-up of gateway
+exports.scheduledPing = async () => {
+  const timestamp = new Date().toISOString();
+  console.log(`Scheduled ping at ${timestamp}`);
+  try {
+    // Optionally warm the health endpoint if running
+    if (process.env.WARM_HEALTH_URL) {
+      await axios.get(process.env.WARM_HEALTH_URL).catch((e) => console.log('Warm health failed:', e.message));
+    }
+  } catch (e) {
+    console.log('scheduledPing warning:', e.message);
+  }
+  return createResponse(200, { ok: true, pingAt: timestamp });
 };
