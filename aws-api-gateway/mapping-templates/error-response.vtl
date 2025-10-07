@@ -1,0 +1,20 @@
+## Generic Error Response Mapping Template
+## Standardizes error responses across all integrations
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "success": false,
+  "error": {
+    "code": #if($inputRoot.errorType)"$inputRoot.errorType"#{elseif}($inputRoot.__type)"$inputRoot.__type"#{else}"INTERNAL_ERROR"#end,
+    "message": #if($inputRoot.errorMessage)"$util.escapeJavaScript($inputRoot.errorMessage)"#{elseif}($inputRoot.message)"$util.escapeJavaScript($inputRoot.message)"#{else}"An error occurred"#end,
+    "details": #if($inputRoot.errorDetails)$inputRoot.errorDetails#{else}null#end
+  },
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime",
+    "path": "$context.resourcePath",
+    "method": "$context.httpMethod"
+  }
+}
+

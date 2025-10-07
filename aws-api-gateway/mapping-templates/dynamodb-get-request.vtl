@@ -1,0 +1,18 @@
+## DynamoDB GetItem Request Mapping Template
+## Transforms API Gateway request to DynamoDB GetItem format
+
+{
+  "TableName": "MicroStore-Products",
+  "Key": {
+    "id": {
+      "S": "$input.params('id')"
+    }
+  },
+  ## Projection expression for selecting specific attributes
+  #if($input.params('fields'))
+  "ProjectionExpression": "$input.params('fields')",
+  #end
+  ## Consistent read option
+  "ConsistentRead": #if($input.params('consistent') == "true")true#{else}false#end
+}
+

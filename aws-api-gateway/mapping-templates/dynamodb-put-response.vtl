@@ -1,0 +1,18 @@
+## DynamoDB PutItem Response Mapping Template
+## Transforms DynamoDB PutItem response
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "success": true,
+  "message": "Product created successfully",
+  "data": {
+    "id": "$context.requestId",
+    "created": true
+  },
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime"
+  }
+}
+

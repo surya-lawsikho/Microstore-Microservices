@@ -1,0 +1,47 @@
+## HTTP Backend Request Mapping Template
+## Transforms API Gateway request to custom backend format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  ## Custom backend expected format
+  "action": {
+    "type": "$context.httpMethod",
+    "resource": "$context.resourcePath",
+    "timestamp": "$context.requestTime"
+  },
+  
+  ## Client information
+  "client": {
+    "ip": "$context.identity.sourceIp",
+    "userAgent": "$context.identity.userAgent",
+    "requestId": "$context.requestId"
+  },
+  
+  ## Authentication (if present)
+  #if($context.authorizer.sub)
+  "authentication": {
+    "userId": "$context.authorizer.sub",
+    "username": "$context.authorizer.username",
+    "role": "$context.authorizer.role"
+  },
+  #end
+  
+  ## Query filters
+  "filters": {
+    #foreach($param in $input.params().querystring.keySet())
+    "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"#if($foreach.hasNext),#end
+    #end
+  },
+  
+  ## Pagination parameters
+  "pagination": {
+    "page": #if($input.params('page'))$input.params('page')#{else}1#end,
+    "limit": #if($input.params('limit'))$input.params('limit')#{else}10#end,
+    "offset": #if($input.params('offset'))$input.params('offset')#{else}0#end
+  },
+  
+  ## Request payload
+  "payload": #if($input.body && $input.body != "")$input.json('$')#{else}null#end
+}
+

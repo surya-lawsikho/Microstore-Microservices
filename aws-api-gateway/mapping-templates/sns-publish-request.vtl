@@ -1,0 +1,40 @@
+## SNS Publish Request Mapping Template
+## Transforms API Gateway request to SNS Publish format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "TopicArn": "arn:aws:sns:${aws:region}:${aws:accountId}:microstore-notifications",
+  
+  ## Message body
+  "Message": {
+    "event": #if($inputRoot.event)"$inputRoot.event"#{else}"notification"#end,
+    "data": $input.json('$.data'),
+    "metadata": {
+      "source": "api-gateway",
+      "requestId": "$context.requestId",
+      "timestamp": "$context.requestTime",
+      "userId": #if($context.authorizer.sub)"$context.authorizer.sub"#{else}"anonymous"#end
+    }
+  },
+  
+  ## Subject
+  "Subject": #if($inputRoot.subject)"$util.escapeJavaScript($inputRoot.subject)"#{else}"MicroStore Notification"#end,
+  
+  ## Message attributes
+  "MessageAttributes": {
+    "eventType": {
+      "DataType": "String",
+      "StringValue": #if($inputRoot.event)"$inputRoot.event"#{else}"notification"#end
+    },
+    "priority": {
+      "DataType": "String",
+      "StringValue": #if($inputRoot.priority)"$inputRoot.priority"#{else}"normal"#end
+    },
+    "requestId": {
+      "DataType": "String",
+      "StringValue": "$context.requestId"
+    }
+  }
+}
+

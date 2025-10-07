@@ -1,0 +1,39 @@
+## DynamoDB PutItem Request Mapping Template
+## Transforms API Gateway request to DynamoDB PutItem format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "TableName": "MicroStore-Products",
+  "Item": {
+    "id": {
+      "S": "$context.requestId"
+    },
+    "name": {
+      "S": "$inputRoot.name"
+    },
+    "description": {
+      "S": #if($inputRoot.description)"$util.escapeJavaScript($inputRoot.description)"#{else}""#end
+    },
+    "price": {
+      "N": #if($inputRoot.price)"$inputRoot.price"#{else}"0"#end
+    },
+    "stock": {
+      "N": #if($inputRoot.stock)"$inputRoot.stock"#{else}"0"#end
+    },
+    "category": {
+      "S": #if($inputRoot.category)"$inputRoot.category"#{else}"general"#end
+    },
+    "createdAt": {
+      "S": "$context.requestTime"
+    },
+    "updatedAt": {
+      "S": "$context.requestTime"
+    },
+    "createdBy": {
+      "S": #if($context.authorizer.sub)"$context.authorizer.sub"#{else}"anonymous"#end
+    }
+  },
+  "ReturnValues": "ALL_OLD"
+}
+

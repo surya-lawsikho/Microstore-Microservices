@@ -1,0 +1,40 @@
+## SQS SendMessage Request Mapping Template
+## Transforms API Gateway request to SQS SendMessage format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "QueueUrl": "https://sqs.${aws:region}.amazonaws.com/${aws:accountId}/microstore-queue",
+  
+  ## Message body
+  "MessageBody": {
+    "type": #if($inputRoot.type)"$inputRoot.type"#{else}"event"#end,
+    "payload": $input.json('$.payload'),
+    "metadata": {
+      "source": "api-gateway",
+      "requestId": "$context.requestId",
+      "timestamp": "$context.requestTime",
+      "userId": #if($context.authorizer.sub)"$context.authorizer.sub"#{else}"anonymous"#end
+    }
+  },
+  
+  ## Message attributes
+  "MessageAttributes": {
+    "EventType": {
+      "DataType": "String",
+      "StringValue": #if($inputRoot.type)"$inputRoot.type"#{else}"event"#end
+    },
+    "RequestId": {
+      "DataType": "String",
+      "StringValue": "$context.requestId"
+    },
+    "Timestamp": {
+      "DataType": "Number",
+      "StringValue": "$context.requestTimeEpoch"
+    }
+  },
+  
+  ## Delay seconds (0-900)
+  "DelaySeconds": #if($inputRoot.delaySeconds)$inputRoot.delaySeconds#{else}0#end
+}
+

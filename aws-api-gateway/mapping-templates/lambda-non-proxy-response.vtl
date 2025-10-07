@@ -1,0 +1,34 @@
+## Lambda Non-Proxy Response Mapping Template
+## Wraps Lambda output in standardized API response format
+
+#set($inputRoot = $input.path('$'))
+
+## Check if Lambda returned an error
+#if($input.path('$.errorMessage'))
+{
+  "success": false,
+  "error": {
+    "type": "$input.path('$.errorType')",
+    "message": "$util.escapeJavaScript($input.path('$.errorMessage'))",
+    "requestId": "$context.requestId"
+  },
+  "metadata": {
+    "timestamp": "$context.requestTime",
+    "path": "$context.resourcePath",
+    "method": "$context.httpMethod"
+  }
+}
+#else
+{
+  "success": true,
+  "data": $input.json('$'),
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime",
+    "path": "$context.resourcePath",
+    "method": "$context.httpMethod",
+    "responseTime": "$context.responseLatency ms"
+  }
+}
+#end
+

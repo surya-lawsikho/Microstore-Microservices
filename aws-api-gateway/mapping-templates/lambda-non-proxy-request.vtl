@@ -1,0 +1,45 @@
+## Lambda Non-Proxy Request Mapping Template
+## Transforms API Gateway request to simplified Lambda input
+
+#set($inputRoot = $input.path('$'))
+
+{
+  ## Operation type from path or query parameter
+  "operation": #if($input.params('operation'))"$input.params('operation')"#{else}"$context.httpMethod"#end,
+  
+  ## Resource identifier from path parameter
+  "resourceId": #if($input.params('id'))"$input.params('id')"#{else}null#end,
+  
+  ## Request metadata
+  "metadata": {
+    "requestId": "$context.requestId",
+    "requestTime": "$context.requestTime",
+    "sourceIp": "$context.identity.sourceIp",
+    "userAgent": "$context.identity.userAgent"
+  },
+  
+  ## Authenticated user context (from authorizer)
+  "user": {
+    "userId": #if($context.authorizer.sub)"$context.authorizer.sub"#{else}null#end,
+    "username": #if($context.authorizer.username)"$context.authorizer.username"#{else}null#end,
+    "role": #if($context.authorizer.role)"$context.authorizer.role"#{else}"guest"#end
+  },
+  
+  ## Query parameters
+  "queryParameters": {
+    #foreach($param in $input.params().querystring.keySet())
+    "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"#if($foreach.hasNext),#end
+    #end
+  },
+  
+  ## Path parameters
+  "pathParameters": {
+    #foreach($param in $input.params().path.keySet())
+    "$param": "$util.escapeJavaScript($input.params().path.get($param))"#if($foreach.hasNext),#end
+    #end
+  },
+  
+  ## Request body (if present)
+  "body": #if($input.body && $input.body != "")$input.json('$')#{else}null#end
+}
+

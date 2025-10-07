@@ -1,0 +1,27 @@
+## HTTP Backend Response Mapping Template
+## Standardizes backend response for API consumers
+
+#set($inputRoot = $input.path('$'))
+
+{
+  ## API version and status
+  "apiVersion": "v1",
+  "status": "success",
+  
+  ## Transformed data
+  "data": $input.json('$'),
+  
+  ## Response metadata
+  "meta": {
+    "requestId": "$context.requestId",
+    "responseTime": "$context.responseLatency ms",
+    "timestamp": "$context.requestTime",
+    "endpoint": "$context.domainName$context.resourcePath"
+  },
+  
+  ## Links for HATEOAS
+  "links": {
+    "self": "$context.domainName$context.resourcePath"
+  }
+}
+

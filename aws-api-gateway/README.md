@@ -290,6 +290,126 @@ export SLS_DEBUG=*
 serverless deploy
 ```
 
+## Integration Types
+
+This POC demonstrates **all 7 AWS API Gateway integration types**:
+
+### ✅ Currently Implemented
+
+1. **Lambda Proxy Integration** - Main gateway that routes to microservices
+2. **Lambda Non-Proxy Integration** - Lambda with request/response transformations
+3. **AWS Service Integration** - Direct DynamoDB, SNS, and SQS integrations
+4. **Mock Integration** - Mock responses for testing
+5. **Transform Examples** - Request enrichment and pagination
+6. **Mapping Templates (VTL)** - Extensive Velocity Template examples
+
+### 📚 Documentation & Configuration
+
+- **HTTP Proxy/Non-Proxy** - Configured in serverless.yml (requires deployment)
+- **VPC Link** - Complete CloudFormation template provided
+
+### 📖 Learn More
+
+For a comprehensive guide to all integration types, see:
+- **[INTEGRATION-TYPES-GUIDE.md](INTEGRATION-TYPES-GUIDE.md)** - Complete integration types documentation
+- Covers architecture, use cases, pros/cons, and examples for each type
+- Includes VTL (Velocity Template Language) tutorial
+- Comparison tables and decision matrix
+
+## Testing Integration Types
+
+### Run All Integration Tests
+
+```bash
+# Test all integration types
+npm run test:integrations
+
+# Test basic API functionality
+npm run test
+```
+
+### Test Individual Integration Types
+
+```bash
+# Lambda Proxy (existing gateway)
+curl http://localhost:3000/health
+curl http://localhost:3000/api/products
+
+# Lambda Non-Proxy (with transformations)
+curl http://localhost:3000/integrations/non-proxy/products
+curl http://localhost:3000/integrations/non-proxy/products/1
+
+# AWS Service Integrations
+curl http://localhost:3000/integrations/dynamodb/products/test-123
+curl -X POST http://localhost:3000/integrations/sns/publish \
+  -H "Content-Type: application/json" \
+  -d '{"event":"test","subject":"Test","data":{"msg":"hello"}}'
+
+# Mock Integrations
+curl http://localhost:3000/integrations/mock/health
+curl http://localhost:3000/integrations/mock/products
+
+# Transformations
+curl -X POST http://localhost:3000/integrations/transform/enrich \
+  -H "Content-Type: application/json" \
+  -d '{"data":"test"}'
+curl http://localhost:3000/integrations/transform/pagination?page=1&limit=5
+```
+
+## VPC Link Setup (Optional)
+
+To connect API Gateway to private VPC resources:
+
+### 1. Deploy VPC Infrastructure
+
+```bash
+npm run deploy:vpc
+```
+
+This creates:
+- VPC with public and private subnets
+- Network Load Balancer (NLB)
+- VPC Link for API Gateway
+- Security groups and routing
+
+### 2. Update Serverless Configuration
+
+The VPC Link integration is pre-configured in `serverless.yml`. After deploying the VPC stack, deploy the API:
+
+```bash
+npm run deploy:dev
+```
+
+### 3. Test VPC Link
+
+```bash
+curl https://your-api-id.execute-api.region.amazonaws.com/dev/integrations/vpc-link/health
+```
+
+See `vpc-link-cloudformation.yml` for complete VPC Link configuration.
+
+## Mapping Templates
+
+Velocity Template Language (VTL) templates for request/response transformations are in `mapping-templates/`:
+
+- `lambda-non-proxy-request.vtl` - Transform API Gateway request to Lambda input
+- `lambda-non-proxy-response.vtl` - Wrap Lambda output in standard format
+- `http-backend-request.vtl` - Transform for HTTP backends
+- `http-backend-response.vtl` - Standardize HTTP backend responses
+- `dynamodb-get-request.vtl` - Transform to DynamoDB GetItem format
+- `dynamodb-get-response.vtl` - Transform DynamoDB response to JSON
+- `dynamodb-put-request.vtl` - Transform to DynamoDB PutItem format
+- `sns-publish-request.vtl` - Transform to SNS Publish format
+- `sqs-send-request.vtl` - Transform to SQS SendMessage format
+- `error-response.vtl` - Standardize error responses
+
+These templates demonstrate:
+- Context variable usage (`$context.requestId`, `$context.authorizer.*`)
+- Input parsing (`$input.json()`, `$input.params()`)
+- Conditional logic (`#if`, `#else`, `#end`)
+- Loops (`#foreach`)
+- Utility functions (`$util.escapeJavaScript()`, `$util.urlEncode()`)
+
 ## Next Steps
 
 1. **Production Deployment**: Configure proper CORS, rate limiting, and monitoring
@@ -297,3 +417,5 @@ serverless deploy
 3. **API Keys**: Implement API key authentication for external consumers
 4. **Caching**: Configure API Gateway caching for better performance
 5. **Monitoring**: Set up comprehensive monitoring and alerting
+6. **VPC Link**: Deploy VPC infrastructure for private service access
+7. **HTTP Integrations**: Test HTTP proxy/non-proxy after AWS deployment

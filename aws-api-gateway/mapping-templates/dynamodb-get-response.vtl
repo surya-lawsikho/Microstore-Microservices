@@ -1,0 +1,38 @@
+## DynamoDB GetItem Response Mapping Template
+## Transforms DynamoDB response to clean JSON format
+
+#set($inputRoot = $input.path('$'))
+
+## Check if item was found
+#if($inputRoot.Item)
+{
+  "found": true,
+  "data": {
+    "id": "$inputRoot.Item.id.S",
+    "name": "$inputRoot.Item.name.S",
+    "description": #if($inputRoot.Item.description)"$inputRoot.Item.description.S"#{else}null#end,
+    "price": #if($inputRoot.Item.price)$inputRoot.Item.price.N#{else}0#end,
+    "stock": #if($inputRoot.Item.stock)$inputRoot.Item.stock.N#{else}0#end,
+    "category": #if($inputRoot.Item.category)"$inputRoot.Item.category.S"#{else}null#end,
+    "createdAt": #if($inputRoot.Item.createdAt)"$inputRoot.Item.createdAt.S"#{else}null#end,
+    "updatedAt": #if($inputRoot.Item.updatedAt)"$inputRoot.Item.updatedAt.S"#{else}null#end
+  },
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime"
+  }
+}
+#else
+{
+  "found": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Product not found"
+  },
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime"
+  }
+}
+#end
+

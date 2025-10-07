@@ -170,6 +170,41 @@ See `aws-api-gateway/README.md` for deploy and test instructions.
 - Public routes remain open: `GET /health`, `POST /api/users/register|login|refresh-token`, `GET /api/products`.
 - Set `ACCESS_TOKEN_SECRET` to match the user-service before deploy.
 
+## API Gateway Integration Types - Complete Implementation
+
+The `aws-api-gateway` folder now includes **all 7 AWS API Gateway integration types**:
+
+### ✅ Implemented Integration Types
+
+1. **Lambda Proxy Integration** - Full request/response control (existing gateway)
+2. **Lambda Non-Proxy Integration** - API Gateway handles transformations
+3. **HTTP Proxy Integration** - Direct HTTP backend calls
+4. **HTTP Non-Proxy Integration** - HTTP with transformations
+5. **AWS Service Integration** - Direct DynamoDB, SNS, SQS access
+6. **VPC Link Integration** - Private VPC resource connections
+7. **Mock Integration** - Mock responses for testing
+
+### 📚 Documentation
+
+Comprehensive guides available in `aws-api-gateway/`:
+- **QUICK-START.md** - 5-minute quick start guide
+- **INTEGRATION-TYPES-GUIDE.md** - Complete integration types guide (2,500+ lines)
+- **INTEGRATION-ENDPOINTS.md** - Endpoint reference and examples
+- **IMPLEMENTATION-SUMMARY.md** - Implementation overview
+
+### 🚀 Quick Test
+
+```bash
+cd aws-api-gateway
+npm install
+npm run offline          # Start API Gateway
+npm run test:integrations # Test all integration types
+```
+
+### 📖 Learn More
+
+See `aws-api-gateway/QUICK-START.md` for a 5-minute introduction to all integration types!
+
 ## Quick cURL Tests (via Lambda API on http://127.0.0.1:3008)
 
 Health:

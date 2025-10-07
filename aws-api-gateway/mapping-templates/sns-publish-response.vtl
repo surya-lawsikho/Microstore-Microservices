@@ -1,0 +1,15 @@
+## SNS Publish Response Mapping Template
+## Transforms SNS response to API format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "success": true,
+  "message": "Notification published successfully",
+  "messageId": "$inputRoot.MessageId",
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime"
+  }
+}
+

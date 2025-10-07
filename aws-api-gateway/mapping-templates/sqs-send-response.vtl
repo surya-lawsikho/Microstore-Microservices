@@ -1,0 +1,16 @@
+## SQS SendMessage Response Mapping Template
+## Transforms SQS response to API format
+
+#set($inputRoot = $input.path('$'))
+
+{
+  "success": true,
+  "message": "Message sent to queue successfully",
+  "messageId": "$inputRoot.MessageId",
+  "metadata": {
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime",
+    "md5": "$inputRoot.MD5OfMessageBody"
+  }
+}
+
